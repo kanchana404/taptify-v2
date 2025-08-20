@@ -57,12 +57,7 @@ export default function BusinessHeader({
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">Business Profile</h1>
-        <p className="text-muted-foreground">
-          Manage your Google Business Profile information and QR codes
-        </p>
-      </div>
+      
 
       {/* Connection Status */}
       <div className="flex items-center justify-between">
