@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       console.log('User not authenticated');
       return NextResponse.redirect(
         new URL('/Intergrations?auth=error&message=' + encodeURIComponent('User not authenticated'), 
-        process.env.NEXT_PUBLIC_BASE_URL || 'https://voice.taptify.com')
+        process.env.NEXT_PUBLIC_BASE_URL || 'https://beta.taptify.com')
       );
     }
 
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
       console.log('No user found in session');
       return NextResponse.redirect(
         new URL('/Intergrations?auth=error&message=' + encodeURIComponent('User not authenticated'), 
-        process.env.NEXT_PUBLIC_BASE_URL || 'https://voice.taptify.com')
+        process.env.NEXT_PUBLIC_BASE_URL || 'https://beta.taptify.com')
       );
     }
 
@@ -46,12 +46,12 @@ export async function GET(request: NextRequest) {
       console.error('Missing required environment variables');
       return NextResponse.redirect(
         new URL('/Intergrations?auth=error&message=' + encodeURIComponent('OAuth configuration is incomplete'), 
-        process.env.NEXT_PUBLIC_BASE_URL || 'https://voice.taptify.com')
+        process.env.NEXT_PUBLIC_BASE_URL || 'https://beta.taptify.com')
       );
     }
 
     // Get base URL from environment
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://voice.taptify.com';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://beta.taptify.com';
 
     // Handle OAuth error
     if (error) {
@@ -206,7 +206,7 @@ export async function GET(request: NextRequest) {
     console.error('Error in callback:', error);
     return NextResponse.redirect(
       new URL('/Intergrations?auth=error&message=' + encodeURIComponent(error instanceof Error ? error.message : 'Unknown error'), 
-      process.env.NEXT_PUBLIC_BASE_URL || 'https://voice.taptify.com')
+      process.env.NEXT_PUBLIC_BASE_URL || 'https://beta.taptify.com')
     );
   }
 }

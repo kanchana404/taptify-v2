@@ -176,14 +176,14 @@ export default function ProtectReviewPage() {
             setReviewLink("");
             setOriginalReviewLink("");
             setReviewLinkPath("");
-            setReviewLinkHost("https://voice.taptify.com/");
+            setReviewLinkHost("https://beta.taptify.com/");
           }
         } else {
           console.log("No review_link_url in API response, setting default host");
           setReviewLink("");
           setOriginalReviewLink("");
           setReviewLinkPath("");
-          setReviewLinkHost("https://voice.taptify.com/");
+          setReviewLinkHost("https://beta.taptify.com/");
         }
         
         // Set business name
@@ -235,12 +235,12 @@ export default function ProtectReviewPage() {
           } catch (e) {
             console.error("Invalid URL format", e);
             // Set default values if URL parsing fails
-            setReviewLinkHost("https://voice.taptify.com/");
+            setReviewLinkHost("https://beta.taptify.com/");
             setReviewLinkPath("");
           }
         } else {
           console.log("No review_link_url in API response, setting default host");
-          setReviewLinkHost("https://voice.taptify.com/");
+          setReviewLinkHost("https://beta.taptify.com/");
           setReviewLinkPath("");
         }
       } catch (error) {

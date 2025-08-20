@@ -8,7 +8,7 @@ import { eq, and, ne } from "drizzle-orm";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { v4 as uuidv4 } from 'uuid';
 
-const baseUrl = process.env.BASE_URL || 'https://voice.taptify.com';
+const baseUrl = process.env.BASE_URL || 'https://beta.taptify.com';
 
 // Initialize S3 client
 const s3Client = new S3Client({

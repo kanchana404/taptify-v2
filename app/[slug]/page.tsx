@@ -50,10 +50,10 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
           // Direct slug match (if database stores just slugs)
           eq(reviewLinks.review_link_url, slug),
           // Full URL matches
-          eq(reviewLinks.review_link_url, `https://voice.taptify.com/${slug}`),
+          eq(reviewLinks.review_link_url, `https://beta.taptify.com/${slug}`),
           eq(reviewLinks.review_link_url, `http://go.taptify.com/${slug}`),
           eq(reviewLinks.review_link_url, `go.taptify.com/${slug}`),
-          eq(reviewLinks.review_link_url, `https://voice.taptify.com/${slug}`),
+          eq(reviewLinks.review_link_url, `https://beta.taptify.com/${slug}`),
           eq(reviewLinks.review_link_url, `/${slug}`),
           // Partial matches (for current database structure)
           like(reviewLinks.review_link_url, `%/${slug}`),
@@ -80,7 +80,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
       if (user.length > 0) {
         // Found a user with this ID
         userId = user[0].id;
-        reviewLinkUrl = `https://voice.taptify.com/${slug}`;
+        reviewLinkUrl = `https://beta.taptify.com/${slug}`;
       }
     }
 

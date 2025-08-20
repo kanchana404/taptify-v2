@@ -94,7 +94,7 @@ async function generateAIReply(
 // Function to get review data from Google Business API
 async function getGoogleReview(reviewId: string, locationName: string, accountName: string) {
   try {
-            const response = await fetch(`${process.env.NEXTAUTH_URL || 'https://voice.taptify.com'}/api/business?type=review&reviewId=${encodeURIComponent(reviewId)}&locationName=${encodeURIComponent(locationName)}&accountName=${encodeURIComponent(accountName)}`);
+            const response = await fetch(`${process.env.NEXTAUTH_URL || 'https://beta.taptify.com'}/api/business?type=review&reviewId=${encodeURIComponent(reviewId)}&locationName=${encodeURIComponent(locationName)}&accountName=${encodeURIComponent(accountName)}`);
     
     if (!response.ok) {
       throw new Error('Failed to fetch review from Google Business API');
@@ -252,7 +252,7 @@ export async function PUT(req: NextRequest) {
     // For Google Business reviews, we need to submit the reply via the Business API
     if (locationName && accountName) {
       try {
-        const response = await fetch(`${process.env.NEXTAUTH_URL || 'https://voice.taptify.com'}/api/business`, {
+        const response = await fetch(`${process.env.NEXTAUTH_URL || 'https://beta.taptify.com'}/api/business`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

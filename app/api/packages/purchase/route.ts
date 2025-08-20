@@ -126,8 +126,8 @@ export async function POST(req: NextRequest) {
         },
       ],
       mode: mode,
-              success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://voice.taptify.com'}/payment-success?session_id={CHECKOUT_SESSION_ID}&package_id=${packageId}&credits=${packageData.credit_count}`,
-        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://voice.taptify.com'}/packages`,
+              success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://beta.taptify.com'}/payment-success?session_id={CHECKOUT_SESSION_ID}&package_id=${packageId}&credits=${packageData.credit_count}`,
+        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://beta.taptify.com'}/packages`,
       client_reference_id: actualUserId,
     };
 

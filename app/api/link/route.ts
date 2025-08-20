@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
         .from(reviewLinks)
         .where(
           or(
-            eq(reviewLinks.review_link_url, `https://voice.taptify.com/${slug}`),
+            eq(reviewLinks.review_link_url, `https://beta.taptify.com/${slug}`),
             eq(reviewLinks.review_link_url, `http://go.taptify.com/${slug}`),
             eq(reviewLinks.review_link_url, `go.taptify.com/${slug}`)
           )
