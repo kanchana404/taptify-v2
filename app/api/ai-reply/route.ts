@@ -91,17 +91,34 @@ async function generateAIReply(
   }
 }
 
-// Function to get review data from Google Business API
-async function getGoogleReview(reviewId: string, locationName: string, accountName: string) {
+// Function to get review data from Google Business API via internal business endpoint
+async function getGoogleReview(req: NextRequest, reviewId: string, locationName: string, accountName: string) {
   try {
-            const response = await fetch(`${process.env.NEXTAUTH_URL || 'https://beta.taptify.com'}/api/business?type=review&reviewId=${encodeURIComponent(reviewId)}&locationName=${encodeURIComponent(locationName)}&accountName=${encodeURIComponent(accountName)}`);
-    
+    // Ensure we hit our own API with the correct origin and forward auth cookies
+    const origin = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXTAUTH_URL || new URL(req.url).origin;
+    const url = `${origin}/api/business?type=reviews&locationName=${encodeURIComponent(locationName)}&accountName=${encodeURIComponent(accountName)}`;
+
+    const response = await fetch(url, {
+      headers: {
+        // Forward cookies so Clerk auth and any token cookies are available
+        cookie: req.headers.get('cookie') || '',
+      },
+    });
+
     if (!response.ok) {
       throw new Error('Failed to fetch review from Google Business API');
     }
-    
+
     const data = await response.json();
-    return data.review;
+    const reviews = Array.isArray(data.reviews) ? data.reviews : [];
+
+    // Try to match by explicit reviewId or by trailing segment in name
+    const matched = reviews.find((r: any) =>
+      r?.reviewId === reviewId ||
+      (typeof r?.name === 'string' && (r.name.endsWith(`/${reviewId}`) || r.name.split('/').pop() === reviewId))
+    );
+
+    return matched || null;
   } catch (error) {
     console.error('Error fetching Google review:', error);
     return null;
@@ -156,7 +173,7 @@ export async function POST(req: NextRequest) {
     } 
     // Otherwise, try to fetch from Google Business API
     else if (locationName && accountName) {
-      reviewData = await getGoogleReview(validReviewId, locationName, accountName);
+      reviewData = await getGoogleReview(req, validReviewId, locationName, accountName);
     }
 
     if (!reviewData) {
