@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import {
   CheckCircle2,
   Clock,
-  HelpCircle,
   Loader2
 } from "lucide-react";
 import config from '@/lib/config';

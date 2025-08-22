@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { storeOAuthTokens } from '@/lib/oauth-utils';
 import { currentUser, auth } from '@clerk/nextjs/server';
 import db from '@/db/drizzle';
-import { google_oauth, users } from '@/db/schema';
+import { users } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { createUser } from '@/actions/UserAction';
 

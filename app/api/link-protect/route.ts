@@ -69,8 +69,8 @@ export async function GET(req: NextRequest) {
       // If it's a full URL, extract just the path
       if (checkUrl.startsWith('http')) {
         try {
-          const url = new URL(checkUrl);
-          pathToCheck = url.pathname.substring(1); // Remove leading slash
+          const parsedUrl = new URL(checkUrl);
+          pathToCheck = parsedUrl.pathname.substring(1); // Remove leading slash
         } catch (e) {
           // If URL parsing fails, use as is
           pathToCheck = checkUrl;
@@ -216,8 +216,8 @@ export async function POST(req: NextRequest) {
       // If it's a full URL, extract just the path
       if (review_link_url.startsWith('http')) {
         try {
-          const url = new URL(review_link_url);
-          pathToStore = url.pathname.substring(1); // Remove leading slash
+          const parsedUrl = new URL(review_link_url);
+          pathToStore = parsedUrl.pathname.substring(1); // Remove leading slash
         } catch (e) {
           // If URL parsing fails, use as is
           pathToStore = review_link_url;

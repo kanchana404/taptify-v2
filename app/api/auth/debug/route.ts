@@ -1,16 +1,22 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getStoredOAuthTokens, hasValidOAuthConnection } from '@/lib/oauth-utils';
 import { auth } from '@clerk/nextjs/server';
 import db from '@/db/drizzle';
 import { google_oauth } from '@/db/schema';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Get the current user from Clerk
     const { userId } = await auth();
     
-    const debugInfo: any = {
+    const debugInfo: {
+      userId: string;
+      timestamp: string;
+      environment: string;
+      hasGoogleClientConfig: boolean;
+      hasTokensInDatabase?: boolean;
+    } = {
       userId: userId || 'No user ID found',
       timestamp: new Date().toISOString(),
     };

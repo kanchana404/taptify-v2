@@ -2,15 +2,7 @@
 import db from '@/db/drizzle';
 import { google_oauth } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-import { google } from 'googleapis';
 import config from '@/lib/config';
-
-// Initialize OAuth2 client
-const oauth2Client = new google.auth.OAuth2(
-  config.google.clientId,
-  config.google.clientSecret,
-  config.google.redirectUri
-);
 
 export interface TokenData {
   access_token: string;

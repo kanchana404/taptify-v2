@@ -141,7 +141,7 @@ Generate exactly ${postCount} engaging posts.`;
     let generatedContent;
     try {
       generatedContent = JSON.parse(content);
-    } catch (parseError) {
+    } catch {
       // If JSON parsing fails, return the raw content
       return NextResponse.json({
         error: 'Failed to parse AI response',
