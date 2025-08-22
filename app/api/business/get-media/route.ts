@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
         if (errorJson.error?.message) {
           errorMessage = errorJson.error.message;
         }
-      } catch (e) {
+      } catch {
         // Use default error message if parsing fails
       }
       

@@ -91,60 +91,6 @@ export function ReviewPageClient({ initialData, error }: ReviewPageClientProps) 
     }
   };
   
-  // Function to submit positive feedback to our system
-  const handlePositiveFeedbackSubmit = async () => {
-    if (!feedback.trim()) {
-      alert("Please provide some feedback before submitting.");
-      return;
-    }
-    
-    setIsSubmitting(true);
-    setSubmitError("");
-    
-    try {
-      // Send positive feedback to the review-submit API
-      const response = await fetch('/api/review-submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          review_link_url: data?.review_link_url,
-          name: name || "Anonymous",
-          email,
-          phone,
-          stars: starRating,
-          feedback,
-          review_type: 'positive',
-        }),
-      });
-      
-      const result = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to submit feedback');
-      }
-      
-      // Show success
-      setSubmitSuccess(true);
-      
-      // Redirect to Google after a short delay
-      setTimeout(() => {
-        handlePositiveSubmit();
-      }, 2000);
-      
-    } catch (err: any) {
-      console.error("Error submitting positive feedback:", err);
-      setSubmitError(err.message || "There was an error submitting your feedback. Please try again.");
-      // Still redirect to Google after delay even if our system submit fails
-      setTimeout(() => {
-        handlePositiveSubmit();
-      }, 3000);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-  
   // Function to handle negative experience submit
   const handleNegativeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
