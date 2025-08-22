@@ -1,7 +1,7 @@
 // app/api/business/route.ts - Updated version with cookie-based token storage and Clerk authentication
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { getStoredOAuthTokens, isTokenExpired } from '@/lib/oauth-utils';
+import { getStoredOAuthTokens, isTokenExpired, refreshAccessToken, storeOAuthTokens } from '@/lib/oauth-utils';
 import { auth } from '@clerk/nextjs/server';
 
 async function getValidAccessToken(): Promise<string | null> {
@@ -40,7 +40,15 @@ async function getValidAccessToken(): Promise<string | null> {
       if (storedTokens && storedTokens.access_token) {
         // Check if database token is expired
         if (isTokenExpired(storedTokens.expires_at)) {
-          console.log('Database token expired');
+          console.log('Database token expired, attempting refresh...');
+          const newTokens = await refreshAccessToken(storedTokens.refresh_token);
+          if (newTokens) {
+            // Persist refreshed tokens (also updates cookies)
+            await storeOAuthTokens(userId, newTokens, true);
+            console.log('Token refreshed from refresh token');
+            return newTokens.access_token;
+          }
+          console.log('Token refresh failed');
           return null;
         }
         
@@ -714,9 +722,11 @@ export async function GET(request: NextRequest) {
 
       case 'connection-status':
         // Check connection status
-        const hasConnection = !!(await getValidAccessToken());
+        const token = await getValidAccessToken();
+        const hasConnection = !!token;
         return NextResponse.json({
-          connected: hasConnection
+          connected: hasConnection,
+          accessToken: hasConnection
         });
 
       default:
