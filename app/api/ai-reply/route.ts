@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuth } from "@clerk/nextjs/server";
-import OpenAI from 'openai';
 
 // Helper function to validate review ID (supports both string and number IDs)
-function validateReviewId(reviewId: any): string | null {
+function validateReviewId(reviewId: string | number | null | undefined): string | null {
   if (!reviewId) {
     return null;
   }
@@ -113,7 +112,7 @@ async function getGoogleReview(req: NextRequest, reviewId: string, locationName:
     const reviews = Array.isArray(data.reviews) ? data.reviews : [];
 
     // Try to match by explicit reviewId or by trailing segment in name
-    const matched = reviews.find((r: any) =>
+    const matched = reviews.find((r: { reviewId?: string; name?: string }) =>
       r?.reviewId === reviewId ||
       (typeof r?.name === 'string' && (r.name.endsWith(`/${reviewId}`) || r.name.split('/').pop() === reviewId))
     );
@@ -140,7 +139,7 @@ export async function POST(req: NextRequest) {
 
     console.log("User authenticated:", userId);
 
-    const { reviewId, locationName, accountName, replyType, customReply, reviewText, reviewRating, reviewAuthor, businessInfo } = await req.json();
+    const { reviewId, locationName, accountName, replyType, reviewText, reviewRating } = await req.json();
 
     // Validate review ID
     const validReviewId = validateReviewId(reviewId);

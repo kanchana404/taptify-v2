@@ -1,6 +1,6 @@
 // app/api/auth/route.ts
 import { google } from 'googleapis';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { currentUser, auth } from '@clerk/nextjs/server';
 
 const oauth2Client = new google.auth.OAuth2(
@@ -9,7 +9,7 @@ const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_REDIRECT_URI
 );
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Use `auth()` to get the user's ID
     const { userId } = await auth();

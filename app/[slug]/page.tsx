@@ -20,17 +20,6 @@ interface ReviewLinkData {
   review_link_url: string;
 }
 
-// Helper function to extract slug from URL
-function extractSlugFromUrl(url: string): string {
-  // Remove protocol and domain
-  let slug = url.replace(/^https?:\/\/[^\/]+\//, '');
-  // Remove leading slash if present
-  slug = slug.replace(/^\//, '');
-  // Remove any remaining path segments (keep only the last part)
-  slug = slug.split('/').pop() || '';
-  return slug;
-}
-
 // This is a Server Component that fetches data server-side
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   // Extract the slug from route params - await the params first
