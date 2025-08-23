@@ -6,6 +6,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
   MapPin,
   Phone,
@@ -142,6 +144,19 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ selectedLocation, selectedAcc
   const [isEditingSpecialHours, setIsEditingSpecialHours] = useState(false);
   const [editingSpecialHours, setEditingSpecialHours] = useState<SpecialHours>({ specialHourPeriods: [] });
   const [savingSpecialHours, setSavingSpecialHours] = useState(false);
+  const [isEditingCategories, setIsEditingCategories] = useState(false);
+  const [isSavingCategories, setIsSavingCategories] = useState(false);
+  const [editPrimaryCategoryName, setEditPrimaryCategoryName] = useState('');
+  const [editPrimaryCategoryDisplay, setEditPrimaryCategoryDisplay] = useState('');
+  const [editAdditionalCategories, setEditAdditionalCategories] = useState<Array<{ name: string; displayName: string }>>([]);
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [isSavingDescription, setIsSavingDescription] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [isEditingContact, setIsEditingContact] = useState(false);
+  const [isSavingContact, setIsSavingContact] = useState(false);
+  const [editPhone, setEditPhone] = useState('');
+  const [editWebsite, setEditWebsite] = useState('');
 
   // Constants for inline editing
   const DAYS_OF_WEEK = [
@@ -342,6 +357,80 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ selectedLocation, selectedAcc
     loadBusinessDetails();
   };
 
+  const startEditingDescription = () => {
+    setEditTitle(businessDetails?.title || '');
+    setEditDescription(businessDetails?.profile?.description || '');
+    setIsEditingDescription(true);
+  };
+
+  const cancelEditingDescription = () => {
+    setIsEditingDescription(false);
+  };
+
+  const saveEditingDescription = async () => {
+    setIsSavingDescription(true);
+    try {
+      const response = await fetch('/api/business/details', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          locationId: getLocationId(),
+          title: editTitle,
+          profile: { description: editDescription }
+        })
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        toast.error(err.error || 'Failed to update description');
+        return;
+      }
+      toast.success('Business details updated');
+      setIsEditingDescription(false);
+      loadBusinessDetails(true);
+    } catch (e) {
+      toast.error('Failed to update description');
+    } finally {
+      setIsSavingDescription(false);
+    }
+  };
+
+  const startEditingContact = () => {
+    setEditPhone(businessDetails?.phoneNumbers?.primaryPhone || '');
+    setEditWebsite(businessDetails?.websiteUri || '');
+    setIsEditingContact(true);
+  };
+
+  const cancelEditingContact = () => {
+    setIsEditingContact(false);
+  };
+
+  const saveEditingContact = async () => {
+    setIsSavingContact(true);
+    try {
+      const response = await fetch('/api/business/details', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          locationId: getLocationId(),
+          phoneNumbers: { primaryPhone: editPhone },
+          websiteUri: editWebsite
+        })
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        toast.error(err.error || 'Failed to update contact info');
+        return;
+      }
+      toast.success('Contact info updated');
+      setIsEditingContact(false);
+      loadBusinessDetails(true);
+    } catch (e) {
+      toast.error('Failed to update contact info');
+    } finally {
+      setIsSavingContact(false);
+    }
+  };
+
   const getLocationId = () => {
     if (!selectedLocation) return '';
     return selectedLocation.split('/').pop() || '';
@@ -371,6 +460,68 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ selectedLocation, selectedAcc
     setEditingHours(currentHours || { periods: [] });
     setIsEditingHours(true);
   };
+
+  // Categories editing
+  const startEditingCategories = () => {
+    setEditPrimaryCategoryName(businessDetails?.categories?.primaryCategory?.name || '');
+    setEditPrimaryCategoryDisplay(businessDetails?.categories?.primaryCategory?.displayName || '');
+    const additional = (businessDetails as any)?.categories?.additionalCategories || [];
+    setEditAdditionalCategories(additional.map((c: any) => ({ name: c.name || '', displayName: c.displayName || '' })));
+    setIsEditingCategories(true);
+  };
+
+  const addAdditionalCategory = () => {
+    setEditAdditionalCategories(prev => [...prev, { name: '', displayName: '' }]);
+  };
+
+  const updateAdditionalCategory = (index: number, field: 'name' | 'displayName', value: string) => {
+    setEditAdditionalCategories(prev => prev.map((c, i) => i === index ? { ...c, [field]: value } : c));
+  };
+
+  const removeAdditionalCategory = (index: number) => {
+    setEditAdditionalCategories(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const cancelEditingCategories = () => {
+    setIsEditingCategories(false);
+  };
+
+  const saveEditingCategories = async () => {
+    setIsSavingCategories(true);
+    try {
+      const payload: any = {
+        locationId: getLocationId(),
+        categories: {
+          primaryCategory: editPrimaryCategoryName || editPrimaryCategoryDisplay ? {
+            name: editPrimaryCategoryName,
+            displayName: editPrimaryCategoryDisplay
+          } : undefined,
+        }
+      };
+      if (editAdditionalCategories.length > 0) {
+        payload.categories.additionalCategories = editAdditionalCategories;
+      }
+      const response = await fetch('/api/business/details', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        toast.error(err.error || 'Failed to update categories');
+        return;
+      }
+      toast.success('Categories updated');
+      setIsEditingCategories(false);
+      loadBusinessDetails(true);
+    } catch (e) {
+      toast.error('Failed to update categories');
+    } finally {
+      setIsSavingCategories(false);
+    }
+  };
+
+  // Services are read-only for now
 
   const cancelEditingHours = () => {
     setIsEditingHours(false);
@@ -691,66 +842,125 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ selectedLocation, selectedAcc
           {refreshing ? 'Refreshing...' : 'Refresh'}
         </Button>
       </div>
-      {/* Business Description */}
-      {businessDetails.profile?.description && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center bold text-2xl gap-2">
-              
-              Business Description
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="leading-relaxed">{businessDetails.profile.description}</p>
-          </CardContent>
-        </Card>
-      )}
+      {/* Business Description & Title */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between text-2xl">
+            <span>Business Title & Description</span>
+            {!isEditingDescription ? (
+              <Button size="sm" variant="outline" onClick={startEditingDescription}>
+                <Edit className="h-4 w-4 mr-2" /> Edit
+              </Button>
+            ) : (
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={cancelEditingDescription} disabled={isSavingDescription}>Cancel</Button>
+                <Button size="sm" onClick={saveEditingDescription} disabled={isSavingDescription}>
+                  <Save className="h-4 w-4 mr-2" /> {isSavingDescription ? 'Saving...' : 'Save'}
+                </Button>
+              </div>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {!isEditingDescription ? (
+            <div className="space-y-3">
+              <div>
+                <h4 className="font-medium mb-1">Title</h4>
+                <p className="text-lg">{businessDetails.title || 'Not set'}</p>
+              </div>
+              <div>
+                <h4 className="font-medium mb-1">Description</h4>
+                <p className="leading-relaxed">{businessDetails.profile?.description || 'Not set'}</p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <Label>Title</Label>
+                <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} placeholder="Business title" />
+              </div>
+              <div>
+                <Label>Description</Label>
+                <Textarea value={editDescription} onChange={(e) => setEditDescription(e.target.value)} placeholder="Business description" rows={4} />
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
 
       {/* Contact Information */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center bold text-2xl gap-2">
-            
-            Contact Information
+          <CardTitle className="flex items-center justify-between text-2xl">
+            <span>Contact Information</span>
+            {!isEditingContact ? (
+              <Button size="sm" variant="outline" onClick={startEditingContact}>
+                <Edit className="h-4 w-4 mr-2" /> Edit
+              </Button>
+            ) : (
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={cancelEditingContact} disabled={isSavingContact}>Cancel</Button>
+                <Button size="sm" onClick={saveEditingContact} disabled={isSavingContact}>
+                  <Save className="h-4 w-4 mr-2" /> {isSavingContact ? 'Saving...' : 'Save'}
+                </Button>
+              </div>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <h4 className="font-medium mb-2">Phone</h4>
-            <p className="text-lg">{businessDetails.phoneNumbers?.primaryPhone || 'Not available'}</p>
-          </div>
-          <div>
-            <h4 className="font-medium mb-2">Address</h4>
-            <p className="text-sm leading-relaxed">{formatAddress(businessDetails.storefrontAddress)}</p>
-          </div>
-          {businessDetails.websiteUri && (
-            <div>
-              <h4 className="font-medium mb-2">Website</h4>
-              <a
-                href={businessDetails.websiteUri}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline flex items-center gap-1"
-              >
-                Visit Website
-                <ExternalLink className="h-3 w-3" />
-              </a>
-            </div>
-          )}
-          {businessDetails.metadata?.mapsUri && (
-            <div>
-              <h4 className="font-medium mb-2">Google Maps</h4>
-              <a
-                href={businessDetails.metadata.mapsUri}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline flex items-center gap-1"
-              >
-                View on Maps
-                <ExternalLink className="h-3 w-3" />
-              </a>
-            </div>
+          {!isEditingContact ? (
+            <>
+              <div>
+                <h4 className="font-medium mb-2">Phone</h4>
+                <p className="text-lg">{businessDetails.phoneNumbers?.primaryPhone || 'Not available'}</p>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">Address</h4>
+                <p className="text-sm leading-relaxed">{formatAddress(businessDetails.storefrontAddress)}</p>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">Website</h4>
+                {businessDetails.websiteUri ? (
+                  <a
+                    href={businessDetails.websiteUri}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline flex items-center gap-1"
+                  >
+                    Visit Website
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Not available</p>
+                )}
+              </div>
+              {businessDetails.metadata?.mapsUri && (
+                <div>
+                  <h4 className="font-medium mb-2">Google Maps</h4>
+                  <a
+                    href={businessDetails.metadata.mapsUri}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline flex items-center gap-1"
+                  >
+                    View on Maps
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <div>
+                <Label>Phone</Label>
+                <Input value={editPhone} onChange={(e) => setEditPhone(e.target.value)} placeholder="+1234567890" />
+              </div>
+              <div>
+                <Label>Website</Label>
+                <Input value={editWebsite} onChange={(e) => setEditWebsite(e.target.value)} placeholder="https://example.com" />
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
@@ -763,15 +973,89 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ selectedLocation, selectedAcc
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {businessDetails.categories?.primaryCategory && (
-            <div className="mb-6">
-              <h4 className="font-medium mb-2">Primary Category</h4>
-              <Badge variant="outline" className="text-lg px-3 py-1">
-                {businessDetails.categories.primaryCategory.displayName}
-              </Badge>
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="font-medium">Categories</h4>
+            {!isEditingCategories ? (
+              <Button size="sm" variant="outline" onClick={startEditingCategories}>
+                <Edit className="h-4 w-4 mr-2" /> Edit
+              </Button>
+            ) : (
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={cancelEditingCategories} disabled={isSavingCategories}>Cancel</Button>
+                <Button size="sm" onClick={saveEditingCategories} disabled={isSavingCategories}>
+                  <Save className="h-4 w-4 mr-2" /> {isSavingCategories ? 'Saving...' : 'Save'}
+                </Button>
+              </div>
+            )}
+          </div>
+          {!isEditingCategories ? (
+            <>
+              {businessDetails.categories?.primaryCategory && (
+                <div className="mb-6">
+                  <h4 className="font-medium mb-2">Primary Category</h4>
+                  <Badge variant="outline" className="text-lg px-3 py-1">
+                    {businessDetails.categories.primaryCategory.displayName}
+                  </Badge>
+                </div>
+              )}
+              {((businessDetails as any)?.categories?.additionalCategories || []).length > 0 && (
+                <div className="mb-6">
+                  <h4 className="font-medium mb-3">Additional Categories</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {((businessDetails as any).categories.additionalCategories).map((cat: any, idx: number) => (
+                      <Badge key={idx} variant="secondary">{cat.displayName || cat.name}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="space-y-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Primary Category Name</Label>
+                  <Input value={editPrimaryCategoryName} onChange={(e) => setEditPrimaryCategoryName(e.target.value)} placeholder="gcid:hair_salon" />
+                </div>
+                <div>
+                  <Label>Primary Category Display Name</Label>
+                  <Input value={editPrimaryCategoryDisplay} onChange={(e) => setEditPrimaryCategoryDisplay(e.target.value)} placeholder="Hair salon" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Additional Categories</Label>
+                  <Button size="sm" variant="outline" onClick={addAdditionalCategory}><Plus className="h-4 w-4 mr-1" />Add</Button>
+                </div>
+                {editAdditionalCategories.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">None</p>
+                ) : (
+                  <div className="space-y-3">
+                    {editAdditionalCategories.map((cat, idx) => (
+                      <div key={idx} className="grid grid-cols-1 md:grid-cols-3 gap-2 items-end">
+                        <div>
+                          <Label>Name</Label>
+                          <Input value={cat.name} onChange={(e) => updateAdditionalCategory(idx, 'name', e.target.value)} placeholder="gcid:pizza_restaurant" />
+                        </div>
+                        <div>
+                          <Label>Display Name</Label>
+                          <Input value={cat.displayName} onChange={(e) => updateAdditionalCategory(idx, 'displayName', e.target.value)} placeholder="Pizza restaurant" />
+                        </div>
+                        <div>
+                          <Button size="sm" variant="ghost" className="text-red-500" onClick={() => removeAdditionalCategory(idx)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
+          <div className="mb-4">
+            <h4 className="font-medium">Services</h4>
+          </div>
           {businessDetails.categories?.primaryCategory?.serviceTypes && (
             <div className="mb-6">
               <h4 className="font-medium mb-3">Available Services</h4>
@@ -779,6 +1063,18 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ selectedLocation, selectedAcc
                 {businessDetails.categories.primaryCategory.serviceTypes.map((service, index) => (
                   <Badge key={index} variant="secondary" className="justify-start">
                     {service.displayName}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+          {businessDetails.serviceItems && businessDetails.serviceItems.length > 0 && (
+            <div>
+              <h4 className="font-medium mb-3">Active Service Items</h4>
+              <div className="flex flex-wrap gap-2">
+                {businessDetails.serviceItems.map((item, index) => (
+                  <Badge key={index} variant="outline">
+                    {item.structuredServiceItem.serviceTypeId.replace('job_type_id:', '').replace(/_/g, ' ')}
                   </Badge>
                 ))}
               </div>
