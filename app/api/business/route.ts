@@ -9,6 +9,9 @@ async function getValidAccessToken(): Promise<string | null> {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('google_access_token')?.value;
   const tokenExpiry = cookieStore.get('google_token_expiry')?.value;
+
+  // Redacted sensitive access token logging
+  
   
   if (accessToken) {
     // Check if cookie token is expired

@@ -39,8 +39,13 @@ export function useBusinessData(userId?: string) {
   
   // Stats date range
   const [statsDateRange, setStatsDateRange] = useState({
-    startDate: format(new Date(new Date().getFullYear(), new Date().getMonth(), 1), 'yyyy-MM-dd'),
-    endDate: format(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0), 'yyyy-MM-dd')
+    startDate: (() => {
+      const d = new Date();
+      const start = new Date(d);
+      start.setMonth(start.getMonth() - 6);
+      return format(start, 'yyyy-MM-dd');
+    })(),
+    endDate: format(new Date(), 'yyyy-MM-dd')
   });
 
   // Add new state for tracking token refresh attempts
@@ -505,7 +510,24 @@ export function useBusinessData(userId?: string) {
     try {
       setLoadingStats(true);
       
-      const locId = locationId || selectedLocation?.split('/').pop() || '3225894654666374777';
+      console.log('=== loadBusinessStats DEBUG ===');
+      console.log('locationId parameter:', locationId);
+      console.log('selectedLocation state:', selectedLocation);
+      
+      // Extract locationId from the passed parameter or fallback to selectedLocation
+      let locId: string;
+      if (locationId) {
+        // If locationId is passed directly, extract the numeric ID from it
+        if (locationId.includes('/')) {
+          locId = locationId.split('/').pop() || '3225894654666374777';
+        } else {
+          locId = locationId;
+        }
+        console.log('Using passed locationId, extracted locId:', locId);
+      } else {
+        locId = selectedLocation?.split('/').pop() || '3225894654666374777';
+        console.log('Using selectedLocation state, extracted locId:', locId);
+      }
       
       const dateRange = customDateRange || statsDateRange;
       const startDate = new Date(dateRange.startDate);
@@ -516,9 +538,9 @@ export function useBusinessData(userId?: string) {
         return;
       }
       
-      const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-      if (daysDiff > 365) {
-        toast.error('Date range cannot exceed 1 year');
+      const sixMonthsMs = 1000 * 60 * 60 * 24 * 31 * 6; // approx 6 months
+      if (endDate.getTime() - startDate.getTime() > sixMonthsMs) {
+        toast.error('Date range cannot exceed 6 months');
         return;
       }
       
@@ -532,6 +554,10 @@ export function useBusinessData(userId?: string) {
         endDay: endDate.getDate().toString(),
       });
 
+      console.log('API call params - locationId:', locId);
+      console.log('API call params - dateRange:', dateRange);
+      console.log('Full API URL params:', params.toString());
+
       const response = await apiCallWithTokenRefresh(
         () => fetch(`/api/business/stats?${params}`),
         () => loadBusinessStats(locationId, customDateRange)
@@ -539,6 +565,8 @@ export function useBusinessData(userId?: string) {
       
       if (response) {
         const data = await response.json();
+        console.log('API response data:', data);
+        console.log('Setting businessStats with data for locationId:', locId);
         setBusinessStats(data);
         
         // Mark business stats as loaded and reset error toast flag
@@ -698,7 +726,7 @@ export function useBusinessData(userId?: string) {
         loadPhotos(selectedAccount, locationName),
         loadPosts(selectedAccount, locationName),
         loadAnalytics(selectedAccount, locationName),
-        loadBusinessStats(),
+        loadBusinessStats(locationName), // Pass the new locationName directly
         loadDetailedBusinessInfo(locationName)
       ]);
     }

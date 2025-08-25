@@ -196,6 +196,13 @@ export interface BusinessStats {
       end: string;
     };
   };
+  keywords?: Array<{
+    searchKeyword: string;
+    insightsValue: {
+      value?: string;
+      threshold?: string;
+    };
+  }>;
 }
 
 // Enhanced PostFormData to match Google Local Post specification

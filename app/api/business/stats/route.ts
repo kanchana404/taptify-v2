@@ -35,8 +35,27 @@ export async function GET(request: NextRequest) {
     const endMonth = searchParams.get('endMonth') || '6';
     const endDay = searchParams.get('endDay') || '30';
 
-    // Fetch business performance metrics
-    const metricsUrl = `https://businessprofileperformance.googleapis.com/v1/locations/${locationId}:fetchMultiDailyMetricsTimeSeries?dailyMetrics=WEBSITE_CLICKS&dailyMetrics=CALL_CLICKS&dailyRange.start_date.year=${startYear}&dailyRange.start_date.month=${startMonth}&dailyRange.start_date.day=${startDay}&dailyRange.end_date.year=${endYear}&dailyRange.end_date.month=${endMonth}&dailyRange.end_date.day=${endDay}`;
+    // Fetch business performance metrics (multi metrics)
+    const metricsParams = new URLSearchParams();
+    const dailyMetrics = [
+      'BUSINESS_IMPRESSIONS_DESKTOP_MAPS',
+      'BUSINESS_IMPRESSIONS_DESKTOP_SEARCH',
+      'BUSINESS_IMPRESSIONS_MOBILE_MAPS',
+      'BUSINESS_IMPRESSIONS_MOBILE_SEARCH',
+      'BUSINESS_CONVERSATIONS',
+      'BUSINESS_DIRECTION_REQUESTS',
+      'CALL_CLICKS',
+      'WEBSITE_CLICKS',
+      'BUSINESS_BOOKINGS',
+    ];
+    dailyMetrics.forEach((m) => metricsParams.append('dailyMetrics', m));
+    metricsParams.append('dailyRange.startDate.year', startYear);
+    metricsParams.append('dailyRange.startDate.month', startMonth);
+    metricsParams.append('dailyRange.startDate.day', startDay);
+    metricsParams.append('dailyRange.endDate.year', endYear);
+    metricsParams.append('dailyRange.endDate.month', endMonth);
+    metricsParams.append('dailyRange.endDate.day', endDay);
+    const metricsUrl = `https://businessprofileperformance.googleapis.com/v1/locations/${locationId}:fetchMultiDailyMetricsTimeSeries?${metricsParams.toString()}`;
     
     const metricsResponse = await fetch(metricsUrl, {
       method: 'GET',
@@ -70,6 +89,31 @@ export async function GET(request: NextRequest) {
 
     const metricsData = await metricsResponse.json();
 
+    // Fetch monthly search keywords (bonus)
+    // Derive monthly range from provided start/end
+    const keywordsParams = new URLSearchParams();
+    keywordsParams.append('monthlyRange.startMonth.year', startYear);
+    keywordsParams.append('monthlyRange.startMonth.month', startMonth);
+    keywordsParams.append('monthlyRange.endMonth.year', endYear);
+    keywordsParams.append('monthlyRange.endMonth.month', endMonth);
+    const keywordsUrl = `https://businessprofileperformance.googleapis.com/v1/locations/${locationId}/searchkeywords/impressions/monthly?${keywordsParams.toString()}`;
+
+    let keywordsData: any = null;
+    try {
+      const keywordsResponse = await fetch(keywordsUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (keywordsResponse.ok) {
+        keywordsData = await keywordsResponse.json();
+      }
+    } catch (e) {
+      console.warn('Keywords API fetch failed:', e);
+    }
+
     // Fetch business address information
     const addressUrl = `https://mybusinessbusinessinformation.googleapis.com/v1/locations/${locationId}?readMask=storefrontAddress`;
     
@@ -97,7 +141,8 @@ export async function GET(request: NextRequest) {
           start: `${startYear}-${startMonth.padStart(2, '0')}-${startDay.padStart(2, '0')}`,
           end: `${endYear}-${endMonth.padStart(2, '0')}-${endDay.padStart(2, '0')}`
         }
-      }
+      },
+      keywords: keywordsData?.searchKeywordsCounts || []
     };
 
     // Calculate totals from the metrics data

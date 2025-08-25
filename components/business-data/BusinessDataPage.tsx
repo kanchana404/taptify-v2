@@ -15,6 +15,7 @@ import OverviewTab from './tabs/OverviewTab';
 import PhotosTab from './tabs/PhotosTab';
 import PostsTab from './tabs/PostsTab';
 import ReviewsTab from './tabs/ReviewsTab';
+import AnalyticsTab from './tabs/AnalyticsTab';
 import PhotoUploadDialog from './dialogs/PhotoUploadDialog';
 import PostCreateDialog from './dialogs/PostCreateDialog';
 import GeneratedPostsDialog from './dialogs/GeneratedPostsDialog';
@@ -644,9 +645,16 @@ export default function BusinessDataPage() {
                         </TabsContent>
 
                         <TabsContent value="analytics">
-                          <div className="text-center py-8">
-                            <p className="text-muted-foreground">Detailed business analytics coming soon</p>
-                          </div>
+                          <AnalyticsTab
+                            businessStats={businessStats}
+                            loading={loadingStats}
+                            currentRange={{ startDate: statsDateRange.startDate, endDate: statsDateRange.endDate }}
+                            onApplyDateRange={(range) => {
+                              setStatsDateRange(range);
+                              loadBusinessStats(undefined, range);
+                            }}
+                            selectedLocation={selectedLocation || ''}
+                          />
                         </TabsContent>
 
                         <TabsContent value="photos">

@@ -3,6 +3,7 @@ export { default as BusinessDataPage } from './BusinessDataPage';
 export { default as BusinessHeader } from './BusinessHeader';
 
 // Tab components
+export { default as AnalyticsTab } from './tabs/AnalyticsTab';
 export { default as PhotosTab } from './tabs/PhotosTab';
 export { default as PostsTab } from './tabs/PostsTab';
 export { default as ReviewsTab } from './tabs/ReviewsTab';
