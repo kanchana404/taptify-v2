@@ -96,18 +96,22 @@ export async function POST(req: NextRequest) {
     };
 
     // Update based on step
+    console.log(`Updating step: ${step} with data:`, data);
     switch (step) {
       case 'profile':
         updates.profile_completed = true;
         updates.current_step = 'voice';
+        console.log('Profile step completed, moving to voice');
         break;
       case 'voice':
         updates.voice_selected = true;
         updates.current_step = 'google';
+        console.log('Voice step completed, moving to google');
         break;
       case 'google':
         updates.google_connected = data?.connected || false;
         updates.current_step = 'complete';
+        console.log(`Google step completed, connected: ${data?.connected}, moving to complete`);
         break;
       default:
         return NextResponse.json(

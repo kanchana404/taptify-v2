@@ -71,11 +71,16 @@ export default function GoogleStep({ onComplete, isConnected = false }: GoogleSt
     return () => clearInterval(interval);
   }, []);
 
+  // If user is already connected, update the connection status
   useEffect(() => {
     if (isConnected) {
+      setConnectionStatus("connected");
+      // Try to get the account info
       checkGoogleConnection();
     }
   }, [isConnected]);
+
+
 
   // Check if user just returned from OAuth
   useEffect(() => {
@@ -91,12 +96,15 @@ export default function GoogleStep({ onComplete, isConnected = false }: GoogleSt
 
   const checkGoogleConnection = async () => {
     try {
+      console.log("GoogleStep: Checking Google connection status...");
       const response = await fetch("/api/auth/status");
       if (response.ok) {
         const data = await response.json();
-        if (data.googleConnected) {
+        console.log("GoogleStep: Auth status response:", data);
+        if (data.isAuthenticated) {
+          console.log("GoogleStep: Google is authenticated");
           setConnectionStatus("connected");
-          setGoogleAccount(data.googleAccount);
+          setGoogleAccount(data.googleAccount || data.tokenInfo?.email || data.tokenInfo?.audience || "Google Account");
           
           // If we just detected a connection, automatically complete this step
           if (!isConnected) {
@@ -105,6 +113,8 @@ export default function GoogleStep({ onComplete, isConnected = false }: GoogleSt
               onComplete({ connected: true });
             }, 1000); // Small delay to show the success state
           }
+        } else {
+          console.log("GoogleStep: Google is not authenticated");
         }
       }
     } catch (error) {

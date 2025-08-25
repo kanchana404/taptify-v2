@@ -44,10 +44,13 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json({
       isAuthenticated: true,
+      googleConnected: true, // Add this for backward compatibility
+      googleAccount: tokenInfo.email || tokenInfo.audience || 'Google Account', // Add this for backward compatibility
       tokenInfo: {
         scope: tokenInfo.scope,
         expires_in: tokenInfo.expires_in,
-        audience: tokenInfo.audience
+        audience: tokenInfo.audience,
+        email: tokenInfo.email
       },
       message: 'Successfully authenticated'
     });

@@ -16,8 +16,14 @@ export default function OnboardingWrapper({ children }: OnboardingWrapperProps) 
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    if (isLoaded && user && !pathname.startsWith('/onboarding')) {
-      checkOnboardingStatus();
+    if (isLoaded && user) {
+      if (pathname.startsWith('/onboarding')) {
+        // If user is on onboarding page, don't check status
+        setIsChecking(false);
+      } else {
+        // Check if user should be redirected to onboarding
+        checkOnboardingStatus();
+      }
     } else {
       setIsChecking(false);
     }

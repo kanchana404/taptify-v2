@@ -89,6 +89,14 @@ export async function GET(req: NextRequest) {
     if (record.google_connected) completedSteps.push('google');
 
     const stepIndex = ['profile', 'voice', 'google'].indexOf(record.current_step);
+    
+    console.log('Onboarding status for user:', actualUserId);
+    console.log('- Profile completed:', record.profile_completed);
+    console.log('- Voice selected:', record.voice_selected);
+    console.log('- Google connected:', record.google_connected);
+    console.log('- Current step:', record.current_step);
+    console.log('- Onboarding completed:', record.onboarding_completed);
+    console.log('- Completed steps:', completedSteps);
 
     return NextResponse.json({
       onboarding_completed: record.onboarding_completed,

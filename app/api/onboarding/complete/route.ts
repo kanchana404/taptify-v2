@@ -81,12 +81,20 @@ export async function POST(req: NextRequest) {
     const record = onboardingRecord[0];
 
     // Check if all required steps are completed
+    console.log('Checking onboarding completion requirements:');
+    console.log('- Profile completed:', record.profile_completed);
+    console.log('- Voice selected:', record.voice_selected);
+    console.log('- Google connected:', record.google_connected);
+    
     if (!record.profile_completed || !record.voice_selected || !record.google_connected) {
+      console.log('Cannot complete onboarding - required steps not finished');
       return NextResponse.json(
         { error: 'Cannot complete onboarding - required steps not finished. Profile, voice, and Google connection are required.' },
         { status: 400 }
       );
     }
+    
+    console.log('All steps completed, proceeding with onboarding completion');
 
     // Mark onboarding as completed
     await db

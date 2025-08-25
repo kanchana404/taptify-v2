@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     if (!userId) {
       console.log('User not authenticated');
       return NextResponse.redirect(
-        new URL('/Intergrations?auth=error&message=' + encodeURIComponent('User not authenticated'), 
+        new URL('/onboarding?auth=error&message=' + encodeURIComponent('User not authenticated'), 
         process.env.NEXT_PUBLIC_BASE_URL || 'https://beta.taptify.com')
       );
     }
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     if (!user) {
       console.log('No user found in session');
       return NextResponse.redirect(
-        new URL('/Intergrations?auth=error&message=' + encodeURIComponent('User not authenticated'), 
+        new URL('/onboarding?auth=error&message=' + encodeURIComponent('User not authenticated'), 
         process.env.NEXT_PUBLIC_BASE_URL || 'https://beta.taptify.com')
       );
     }
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET || !process.env.GOOGLE_REDIRECT_URI) {
       console.error('Missing required environment variables');
       return NextResponse.redirect(
-        new URL('/Intergrations?auth=error&message=' + encodeURIComponent('OAuth configuration is incomplete'), 
+        new URL('/onboarding?auth=error&message=' + encodeURIComponent('OAuth configuration is incomplete'), 
         process.env.NEXT_PUBLIC_BASE_URL || 'https://beta.taptify.com')
       );
     }
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error('OAuth error:', error);
       return NextResponse.redirect(
-        new URL('/Intergrations?auth=error&message=' + encodeURIComponent('OAuth failed'), baseUrl)
+        new URL('/onboarding?auth=error&message=' + encodeURIComponent('OAuth failed'), baseUrl)
       );
     }
 
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
     if (!code) {
       console.error('No authorization code received');
       return NextResponse.redirect(
-        new URL('/Intergrations?auth=error&message=' + encodeURIComponent('No authorization code'), baseUrl)
+        new URL('/onboarding?auth=error&message=' + encodeURIComponent('No authorization code'), baseUrl)
       );
     }
 
@@ -158,7 +158,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Store tokens in cookies for immediate use
-    const response = NextResponse.redirect(new URL('/Intergrations?auth=success', baseUrl));
+    // Redirect to onboarding page if user is in onboarding flow, otherwise to integrations
+    const response = NextResponse.redirect(new URL('/onboarding?auth=success', baseUrl));
     
     // Determine if we're in development or production
     const isProduction = process.env.NODE_ENV === 'production';
@@ -205,7 +206,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error in callback:', error);
     return NextResponse.redirect(
-      new URL('/Intergrations?auth=error&message=' + encodeURIComponent(error instanceof Error ? error.message : 'Unknown error'), 
+      new URL('/onboarding?auth=error&message=' + encodeURIComponent(error instanceof Error ? error.message : 'Unknown error'), 
       process.env.NEXT_PUBLIC_BASE_URL || 'https://beta.taptify.com')
     );
   }

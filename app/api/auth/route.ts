@@ -38,21 +38,21 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    // Define the scopes for Google Business Profile
-    const scopes = [
-      'https://www.googleapis.com/auth/business.manage',
-      'https://www.googleapis.com/auth/places',
-      'https://www.googleapis.com/auth/business.readonly',
-    ];
+    // Use the exact same scope as the integrations page
+    const scope = 'https://www.googleapis.com/auth/business.manage';
 
-    // Generate the OAuth authorization URL
+    console.log('Using OAuth scope:', scope);
+
+    // Generate the OAuth authorization URL using the same method as integrations page
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
-      scope: scopes,
+      scope: scope,
       prompt: 'consent', // Force consent screen to get refresh token
       include_granted_scopes: true,
       state: userId, // Pass the user ID in state parameter
     });
+
+    console.log('Generated OAuth URL with scope:', scope);
 
     console.log('Generated auth URL for user:', userId);
 

@@ -52,14 +52,45 @@ export default function OnboardingPage() {
     }
   }, [isLoaded, user]);
 
+  // Prevent users who have completed onboarding from accessing this page
+  useEffect(() => {
+    if (isLoaded && user && !isLoading) {
+      const checkIfAlreadyCompleted = async () => {
+        try {
+          const response = await fetch("/api/onboarding/status");
+          if (response.ok) {
+            const data = await response.json();
+            if (data.onboarding_completed) {
+              console.log('User already completed onboarding, redirecting to dashboard');
+              router.push("/");
+            }
+          }
+        } catch (error) {
+          console.error("Error checking if onboarding already completed:", error);
+        }
+      };
+      
+      checkIfAlreadyCompleted();
+    }
+  }, [isLoaded, user, isLoading, router]);
+
   // Check if user is returning from Google OAuth
   useEffect(() => {
     if (isLoaded && user && !isLoading) {
       const authSuccess = searchParams.get('auth');
+      const authError = searchParams.get('message');
+      
       if (authSuccess === 'success') {
         // User just returned from successful Google OAuth
         console.log('User returned from Google OAuth, checking onboarding status...');
-        checkOnboardingStatus();
+        // Small delay to ensure OAuth tokens are stored
+        setTimeout(() => {
+          checkOnboardingStatus();
+        }, 1000);
+      } else if (authError) {
+        // User returned with an OAuth error
+        console.error('OAuth error:', authError);
+        // You could show an error message to the user here
       }
     }
   }, [isLoaded, user, isLoading, searchParams]);
@@ -86,9 +117,31 @@ export default function OnboardingPage() {
           return;
         }
         
+        // If user just connected Google and has completed other steps, complete onboarding
+        const authSuccess = searchParams.get('auth');
+        if (authSuccess === 'success' && data.profile_completed && data.voice_selected) {
+          // Check if Google is actually connected by calling the auth status API
+          try {
+            const authResponse = await fetch("/api/auth/status");
+            if (authResponse.ok) {
+              const authData = await authResponse.json();
+              if (authData.isAuthenticated) {
+                console.log('Google OAuth successful and all other steps completed, completing onboarding...');
+                // Update the Google step in the database
+                await updateStep("google", { connected: true });
+                return;
+              }
+            }
+          } catch (error) {
+            console.error("Error checking Google auth status:", error);
+          }
+        }
+        
         setCompletedSteps(data.completed_steps || []);
         setCurrentStep(data.current_step_index || 0);
         console.log("Set current step to:", data.current_step_index || 0);
+        console.log("Completed steps:", data.completed_steps || []);
+        console.log("Google connected:", data.google_connected);
         
         // Update local state to reflect Google connection status
         setOnboardingData(prev => ({
@@ -105,6 +158,7 @@ export default function OnboardingPage() {
 
   const updateStep = async (stepId: string, data: any) => {
     try {
+      console.log(`Updating step: ${stepId} with data:`, data);
       const response = await fetch("/api/onboarding/update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -112,13 +166,36 @@ export default function OnboardingPage() {
       });
 
       if (response.ok) {
+        console.log(`Step ${stepId} updated successfully`);
         setCompletedSteps(prev => [...new Set([...prev, stepId])]);
         setOnboardingData(prev => ({ ...prev, [stepId]: data }));
         
+        // If this is the Google step and it's connected, check if we can complete onboarding
+        if (stepId === "google" && data.connected) {
+          console.log('Google step completed, checking if all steps are done...');
+          // Check if all other steps are completed
+          if (completedSteps.includes("profile") && completedSteps.includes("voice")) {
+            console.log('Google connected and all steps completed, completing onboarding...');
+            await completeOnboarding();
+            return;
+          }
+        }
+        
+        // Also check if we can complete onboarding after updating the step
+        const updatedCompletedSteps = [...new Set([...completedSteps, stepId])];
+        console.log('Updated completed steps:', updatedCompletedSteps);
+        if (updatedCompletedSteps.includes("profile") && updatedCompletedSteps.includes("voice") && updatedCompletedSteps.includes("google")) {
+          console.log('All steps completed after update, completing onboarding...');
+          await completeOnboarding();
+          return;
+        }
+        
         // If this is the last step or if we're on the last step, complete onboarding
-        if (currentStep === steps.length - 1 || stepId === "google") {
+        if (currentStep === steps.length - 1) {
+          console.log('On last step, completing onboarding...');
           await completeOnboarding();
         } else if (currentStep < steps.length - 1) {
+          console.log('Moving to next step...');
           setCurrentStep(currentStep + 1);
         }
       }
@@ -129,10 +206,12 @@ export default function OnboardingPage() {
 
   const completeOnboarding = async () => {
     try {
+      console.log('Completing onboarding...');
       const response = await fetch("/api/onboarding/complete", {
         method: "POST",
       });
       if (response.ok) {
+        console.log('Onboarding completed successfully, redirecting to dashboard');
         router.push("/");
       } else {
         console.error("Failed to complete onboarding:", response.status, response.statusText);
